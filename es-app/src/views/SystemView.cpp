@@ -133,7 +133,6 @@ bool SystemView::input(InputConfig* config, Input input)
 		{
 			stopScrolling();
 			if (getSelected()->getName() == "marketplace"){
-				//std::system("/usr/bin/gimp");
 				exit(0);
 			}
 			else {
