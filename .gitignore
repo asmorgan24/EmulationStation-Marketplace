@@ -39,3 +39,20 @@ Makefile
 
 # IntelliJ
 .idea
+
+# build artifacts
+*.cbp
+cmake-build-debug
+
+# compile unit test executable
+runUnitTests
+
+# Server protobuf files
+*.pb.h
+*.pb.cc
+
+# Dolphin File manager preferences
+.directory
+
+# Google Test Dependencies
+googletest-*
