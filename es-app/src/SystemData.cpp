@@ -114,7 +114,8 @@ void SystemData::launchGame(Window* window, FileData* game)
 //	const std::string name = game->getPath().stem().string();
 
     const std::string downloadUri = MarketplaceServers::getInstance()->downloadServer()->
-            getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
+            getGameDownloadLink("download", "password", id);
+//            getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
 
     const std::string downloadPath = "~/RetroPie/roms/" + mName;
     const std::string command = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri + "\"";
