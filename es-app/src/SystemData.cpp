@@ -107,42 +107,26 @@ std::string escapePath(const boost::filesystem::path& path)
 
 void SystemData::launchGame(Window* window, FileData* game)
 {
-	LOG(LogInfo) << "Attempting to launch game...";
+	LOG(LogInfo) << "Attempting to download game...";
 
-	AudioManager::getInstance()->deinit();
-	VolumeControl::getInstance()->deinit();
-	window->deinit();
+	const std::string fullName = escapePath(game->getPath());
+    const std::string id = fullName.substr(0, fullName.find("/", 0));
+	const std::string name = game->getPath().stem().string();
 
-	std::string command = mLaunchCommand;
+    const std::string downloadUrl = MarketplaceServers::getInstance()->downloadServer()->
+            getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
 
-	const std::string rom = escapePath(game->getPath());
-	const std::string basename = game->getPath().stem().string();
-	const std::string rom_raw = fs::path(game->getPath()).make_preferred().string();
+    const std::string downloadPath = "" + mName;
+    const std::string command = "" + downloadUrl;
 
-	command = strreplace(command, "%ROM%", rom);
-	command = strreplace(command, "%BASENAME%", basename);
-	command = strreplace(command, "%ROM_RAW%", rom_raw);
-
-	LOG(LogInfo) << "	" << command;
 	int exitCode = runSystemCommand(command);
 
 	if(exitCode != 0)
 	{
-		LOG(LogWarning) << "...launch terminated with nonzero exit code " << exitCode << "!";
+		LOG(LogWarning) << "...Download terminated with nonzero exit code " << exitCode << "!";
 	}
 
-	window->init();
-	VolumeControl::getInstance()->init();
-	AudioManager::getInstance()->init();
 	window->normalizeNextUpdate();
-
-	//update number of times the game has been launched
-	int timesPlayed = game->metadata.getInt("playcount") + 1;
-	game->metadata.set("playcount", std::to_string(static_cast<long long>(timesPlayed)));
-
-	//update last played time
-	boost::posix_time::ptime time = boost::posix_time::second_clock::universal_time();
-	game->metadata.setTime("lastplayed", time);
 }
 
 void SystemData::populateFolder(FileData* folder)
