@@ -132,7 +132,12 @@ void SystemData::launchGame(Window* window, FileData* game)
 
 void SystemData::populateFolder(FileData* folder)
 {
-    //TODO replace name below once db is populated
+    if (mName == "marketplace") {
+        folder->addChild(new FileData(GAME, "", this));
+        folder->addChild(new FileData(GAME, "", this));
+        return;
+    }
+    
 	std::vector<Game> games = MarketplaceServers::getInstance()->gameServer()->getDownloadableGames(/*"MODERN HORGAN"*/mName);
 
 	for (std::vector<Game>::const_iterator it = games.begin(); it != games.end(); ++it) {
