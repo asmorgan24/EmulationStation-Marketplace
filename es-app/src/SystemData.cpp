@@ -118,9 +118,19 @@ void SystemData::launchGame(Window* window, FileData* game)
 //            getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
 
     const std::string downloadPath = "~/RetroPie/roms/" + mName;
-    const std::string command = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri + "\"";
+    int exitCode;
+    int slashIndex = -1;
+    if ((slashIndex = downloadUri.find("/", 0)) != -1) {
+        const std::string command1 = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri.substr(0, slashIndex) + "\"";
+        exitCode = runSystemCommand(command1);
+        const std::string command2 = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri.substr(slashIndex+1, downloadUri.size() - 1) + "\"";
+        exitCode += runSystemCommand(command2);
+    } else {
+        const std::string command = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri + "\"";
+        exitCode = runSystemCommand(command);
+    }
 
-	int exitCode = runSystemCommand(command);
+
 
 	if(exitCode != 0)
 	{
@@ -137,7 +147,7 @@ void SystemData::populateFolder(FileData* folder)
         folder->addChild(new FileData(GAME, "", this));
         return;
     }
-    
+
 	std::vector<Game> games = MarketplaceServers::getInstance()->gameServer()->getDownloadableGames(/*"MODERN HORGAN"*/mName);
 
 	for (std::vector<Game>::const_iterator it = games.begin(); it != games.end(); ++it) {
