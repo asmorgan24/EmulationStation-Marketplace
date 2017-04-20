@@ -12,7 +12,17 @@ MarketplaceServers::MarketplaceServers() {
 }
 
 MarketplaceServers::~MarketplaceServers() {
+    if (instance != NULL) {
+        delete instance;
+    }
     delete gameClient;
     delete downloadClient;
     delete userClient;
+}
+
+static MarketplaceServers* MarketplaceServers::getInstance() {
+    if (instance == NULL) {
+        instance = new MarketplaceServers();
+    }
+    return instance;
 }

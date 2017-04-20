@@ -7,13 +7,16 @@
 
 class MarketplaceServers {
 public:
-    MarketplaceServers();
-    ~MarketplaceServers();
+    static MarketplaceServers* getInstance();
     GameServer* gameServer() { return  gameClient; }
     LoginServer* userServer() { return userClient; }
     DownloadServer* downloadServer() { return downloadClient; }
 
 private:
+    MarketplaceServers();
+    ~MarketplaceServers();
+
+    static MarketplaceServers* instance;
     GameServer *gameClient;
     LoginServer *userClient;
     DownloadServer *downloadClient;
