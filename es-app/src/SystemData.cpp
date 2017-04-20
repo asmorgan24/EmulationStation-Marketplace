@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Settings.h"
 #include "FileSorts.h"
+#include "../../marketplace/src/MarketplaceServers.h"
 
 std::vector<SystemData*> SystemData::sSystemVector;
 
@@ -106,103 +107,37 @@ std::string escapePath(const boost::filesystem::path& path)
 
 void SystemData::launchGame(Window* window, FileData* game)
 {
-	LOG(LogInfo) << "Attempting to launch game...";
+	LOG(LogInfo) << "Attempting to download game...";
 
-	AudioManager::getInstance()->deinit();
-	VolumeControl::getInstance()->deinit();
-	window->deinit();
+	const std::string fullName = escapePath(game->getPath());
+    const std::string id = fullName.substr(0, fullName.find("/", 0));
+//	const std::string name = game->getPath().stem().string();
 
-	std::string command = mLaunchCommand;
+    const std::string downloadUri = MarketplaceServers::getInstance()->downloadServer()->
+            getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
 
-	const std::string rom = escapePath(game->getPath());
-	const std::string basename = game->getPath().stem().string();
-	const std::string rom_raw = fs::path(game->getPath()).make_preferred().string();
+    const std::string downloadPath = "~/RetroPie/roms/" + mName;
+    const std::string command = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri + "\"";
 
-	command = strreplace(command, "%ROM%", rom);
-	command = strreplace(command, "%BASENAME%", basename);
-	command = strreplace(command, "%ROM_RAW%", rom_raw);
-
-	LOG(LogInfo) << "	" << command;
 	int exitCode = runSystemCommand(command);
 
 	if(exitCode != 0)
 	{
-		LOG(LogWarning) << "...launch terminated with nonzero exit code " << exitCode << "!";
+		LOG(LogWarning) << "...Download terminated with nonzero exit code " << exitCode << "!";
 	}
 
-	window->init();
-	VolumeControl::getInstance()->init();
-	AudioManager::getInstance()->init();
 	window->normalizeNextUpdate();
-
-	//update number of times the game has been launched
-	int timesPlayed = game->metadata.getInt("playcount") + 1;
-	game->metadata.set("playcount", std::to_string(static_cast<long long>(timesPlayed)));
-
-	//update last played time
-	boost::posix_time::ptime time = boost::posix_time::second_clock::universal_time();
-	game->metadata.setTime("lastplayed", time);
 }
 
 void SystemData::populateFolder(FileData* folder)
 {
-	const fs::path& folderPath = folder->getPath();
-	if(!fs::is_directory(folderPath))
-	{
-		LOG(LogWarning) << "Error - folder with path \"" << folderPath << "\" is not a directory!";
-		return;
-	}
+    //TODO replace name below once db is populated
+	std::vector<Game> games = MarketplaceServers::getInstance()->gameServer()->getDownloadableGames("MODERN HORGAN"/*mName*/);
 
-	const std::string folderStr = folderPath.generic_string();
-
-	//make sure that this isn't a symlink to a thing we already have
-	if(fs::is_symlink(folderPath))
-	{
-		//if this symlink resolves to somewhere that's at the beginning of our path, it's gonna recurse
-		if(folderStr.find(fs::canonical(folderPath).generic_string()) == 0)
-		{
-			LOG(LogWarning) << "Skipping infinitely recursive symlink \"" << folderPath << "\"";
-			return;
-		}
-	}
-
-	fs::path filePath;
-	std::string extension;
-	bool isGame;
-	for(fs::directory_iterator end, dir(folderPath); dir != end; ++dir)
-	{
-		filePath = (*dir).path();
-
-		if(filePath.stem().empty())
-			continue;
-
-		//this is a little complicated because we allow a list of extensions to be defined (delimited with a space)
-		//we first get the extension of the file itself:
-		extension = filePath.extension().string();
-		
-		//fyi, folders *can* also match the extension and be added as games - this is mostly just to support higan
-		//see issue #75: https://github.com/Aloshi/EmulationStation/issues/75
-
-		isGame = false;
-		if(std::find(mSearchExtensions.begin(), mSearchExtensions.end(), extension) != mSearchExtensions.end())
-		{
-			FileData* newGame = new FileData(GAME, filePath.generic_string(), this);
-			folder->addChild(newGame);
-			isGame = true;
-		}
-
-		//add directories that also do not match an extension as folders
-		if(!isGame && fs::is_directory(filePath))
-		{
-			FileData* newFolder = new FileData(FOLDER, filePath.generic_string(), this);
-			populateFolder(newFolder);
-
-			//ignore folders that do not contain games
-			if(newFolder->getChildrenByFilename().size() == 0)
-				delete newFolder;
-			else
-				folder->addChild(newFolder);
-		}
+	for (std::vector<Game>::const_iterator it = games.begin(); it != games.end(); ++it) {
+		const std::string gamePath = it->id + "/" + it->name;
+		FileData* newGame = new FileData(GAME, gamePath, this);
+		folder->addChild(newGame);
 	}
 }
 

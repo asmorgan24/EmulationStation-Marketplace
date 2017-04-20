@@ -4,6 +4,8 @@
 
 using namespace std;
 
+MarketplaceServers* MarketplaceServers::instance = NULL;
+
 MarketplaceServers::MarketplaceServers() {
     shared_ptr<grpc::Channel> channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
     gameClient = new GameServer(channel);
@@ -12,7 +14,17 @@ MarketplaceServers::MarketplaceServers() {
 }
 
 MarketplaceServers::~MarketplaceServers() {
-    delete gameClient;
-    delete downloadClient;
-    delete userClient;
+    if (instance != NULL) {
+        delete instance;
+        delete gameClient;
+        delete downloadClient;
+        delete userClient;
+    }
+}
+
+MarketplaceServers* MarketplaceServers::getInstance() {
+    if (instance == NULL) {
+        instance = new MarketplaceServers();
+    }
+    return instance;
 }

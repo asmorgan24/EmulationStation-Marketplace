@@ -43,6 +43,7 @@ Makefile
 # build artifacts
 *.cbp
 cmake-build-debug
+*.tcl
 
 # compile unit test executable
 runUnitTests
