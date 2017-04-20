@@ -190,32 +190,8 @@ void ViewController::launch(FileData* game, Eigen::Vector3f center)
 	stopAnimation(1); // make sure the fade in isn't still playing
 	mLockInput = true;
 
-	if(Settings::getInstance()->getString("TransitionStyle") == "fade")
-	{
-		// fade out, launch game, fade back in
-		auto fadeFunc = [this](float t) {
-			//t -= 1;
-			//mFadeOpacity = lerp<float>(0.0f, 1.0f, t*t*t + 1);
-			mFadeOpacity = lerp<float>(0.0f, 1.0f, t);
-		};
-		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc]
-		{
-			game->getSystem()->launchGame(mWindow, game);
-			mLockInput = false;
-			setAnimation(new LambdaAnimation(fadeFunc, 800), 0, nullptr, true);
-			this->onFileChanged(game, FILE_METADATA_CHANGED);
-		});
-	}else{
-		// move camera to zoom in on center + fade out, launch game, come back in
-		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 1500), 0, [this, origCamera, center, game] 
-		{
-			game->getSystem()->launchGame(mWindow, game);
-			mCamera = origCamera;
-			mLockInput = false;
-			setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 600), 0, nullptr, true);
-			this->onFileChanged(game, FILE_METADATA_CHANGED);
-		});
-	}
+	game->getSystem()->launchGame(mWindow, game);
+	mLockInput = false;
 }
 
 std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* system)
