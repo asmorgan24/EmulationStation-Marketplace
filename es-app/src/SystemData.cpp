@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Settings.h"
 #include "FileSorts.h"
+#include "../../marketplace/src/MarketplaceServers.h"
 
 std::vector<SystemData*> SystemData::sSystemVector;
 
@@ -146,63 +147,13 @@ void SystemData::launchGame(Window* window, FileData* game)
 
 void SystemData::populateFolder(FileData* folder)
 {
-	const fs::path& folderPath = folder->getPath();
-	if(!fs::is_directory(folderPath))
-	{
-		LOG(LogWarning) << "Error - folder with path \"" << folderPath << "\" is not a directory!";
-		return;
-	}
+    //TODO replace name below once db is populated
+	std::vector<Game> games = MarketplaceServers::getInstance()->gameServer()->getDownloadableGames("MODERN HORGAN"/*mName*/);
 
-	const std::string folderStr = folderPath.generic_string();
-
-	//make sure that this isn't a symlink to a thing we already have
-	if(fs::is_symlink(folderPath))
-	{
-		//if this symlink resolves to somewhere that's at the beginning of our path, it's gonna recurse
-		if(folderStr.find(fs::canonical(folderPath).generic_string()) == 0)
-		{
-			LOG(LogWarning) << "Skipping infinitely recursive symlink \"" << folderPath << "\"";
-			return;
-		}
-	}
-
-	fs::path filePath;
-	std::string extension;
-	bool isGame;
-	for(fs::directory_iterator end, dir(folderPath); dir != end; ++dir)
-	{
-		filePath = (*dir).path();
-
-		if(filePath.stem().empty())
-			continue;
-
-		//this is a little complicated because we allow a list of extensions to be defined (delimited with a space)
-		//we first get the extension of the file itself:
-		extension = filePath.extension().string();
-		
-		//fyi, folders *can* also match the extension and be added as games - this is mostly just to support higan
-		//see issue #75: https://github.com/Aloshi/EmulationStation/issues/75
-
-		isGame = false;
-		if(std::find(mSearchExtensions.begin(), mSearchExtensions.end(), extension) != mSearchExtensions.end())
-		{
-			FileData* newGame = new FileData(GAME, filePath.generic_string(), this);
-			folder->addChild(newGame);
-			isGame = true;
-		}
-
-		//add directories that also do not match an extension as folders
-		if(!isGame && fs::is_directory(filePath))
-		{
-			FileData* newFolder = new FileData(FOLDER, filePath.generic_string(), this);
-			populateFolder(newFolder);
-
-			//ignore folders that do not contain games
-			if(newFolder->getChildrenByFilename().size() == 0)
-				delete newFolder;
-			else
-				folder->addChild(newFolder);
-		}
+	for (std::vector<Game>::const_iterator it = games.begin(); it != games.end(); ++it) {
+		const std::string gamePath = it->id + "/" + it->name;
+		FileData* newGame = new FileData(GAME, gamePath, this);
+		folder->addChild(newGame);
 	}
 }
 
