@@ -111,13 +111,13 @@ void SystemData::launchGame(Window* window, FileData* game)
 
 	const std::string fullName = escapePath(game->getPath());
     const std::string id = fullName.substr(0, fullName.find("/", 0));
-	const std::string name = game->getPath().stem().string();
+//	const std::string name = game->getPath().stem().string();
 
-    const std::string downloadUrl = MarketplaceServers::getInstance()->downloadServer()->
+    const std::string downloadUri = MarketplaceServers::getInstance()->downloadServer()->
             getGameDownloadLink("UNAME", "NOT_PASSWORD", id);
 
-    const std::string downloadPath = "" + mName;
-    const std::string command = "" + downloadUrl;
+    const std::string downloadPath = "~/RetroPie/roms/" + mName;
+    const std::string command = "wget -nc -P " + downloadPath + " \"127.0.0.1/" + downloadUri + "\"";
 
 	int exitCode = runSystemCommand(command);
 
