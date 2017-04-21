@@ -143,7 +143,7 @@ void SystemData::launchGame(Window* window, FileData* game)
 void SystemData::populateFolder(FileData* folder)
 {
     if (mName == "marketplace") {
-        folder->addChild(new FileData(GAME, "", this));
+        folder->addChild(new FileData(GAME, "marketplace", this));
         folder->addChild(new FileData(GAME, "", this));
         return;
     }
